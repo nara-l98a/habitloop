@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "habitloop"
+version = "1.0.0"
+description = "中文习惯追踪命令行工具"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+[project.scripts]
+habitloop = "habitloop.app:main"
+[tool.setuptools.packages.find]
+where = ["src"]
