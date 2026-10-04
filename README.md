@@ -41,6 +41,7 @@ habitloop --data ./habits.json report 1 --start 2024-04-01 --end 2024-04-30
 ## 数据格式、隐私与安全限制
 
 JSON 顶层为 `version`、`next_id`、`habits`；习惯含 `id`、`name`、`cadence`、`target`、`created`、`checkins`，其中 checkins 是日期字符串数组。写盘先写同目录临时文件、`fsync` 后原子替换，尽量避免半写文件；它不是事务数据库，请自行备份。文件可能包含你输入的名称和日期，权限遵循 umask；软件不联网、不发送数据、不读取凭据，也不提供加密或密码保护，命令行参数可能进入 shell 历史。`examples/example-data.json` 是虚构示例，不含个人数据。
+每次读取时都会校验版本、ID 唯一性、习惯字段、目标范围及所有日期；文件被手工编辑后若结构或日期非法，会给出中文错误并返回 2，而不会继续执行造成更隐蔽的数据损坏。
 
 ## 开发与测试
 

@@ -11,12 +11,22 @@ def pd(s):
     except ValueError as e:raise ValueError(f"无效日期：{s}，请使用 YYYY-MM-DD") from e
 def fs(d):return d.isoformat()
 def path(v):return Path(v or os.environ.get("HABITLOOP_DATA","~/.habitloop.json")).expanduser()
+def validate(x):
+    if not isinstance(x,dict) or x.get("version")!=1 or not isinstance(x.get("next_id"),int) or x["next_id"]<1 or not isinstance(x.get("habits"),list):raise ValueError
+    ids=[]
+    for h in x["habits"]:
+        if not isinstance(h,dict) or not isinstance(h.get("id"),int) or h["id"]<1 or h["id"] in ids or not isinstance(h.get("name"),str) or not h["name"].strip() or h.get("cadence") not in ("daily","weekly") or not isinstance(h.get("target"),int) or (h["cadence"]=="daily" and h["target"]!=1) or (h["cadence"]=="weekly" and not 1<=h["target"]<=7) or not isinstance(h.get("created"),str) or not isinstance(h.get("checkins"),list):raise ValueError
+        pd(h["created"])
+        if any(not isinstance(d,str) for d in h["checkins"]):raise ValueError
+        [pd(d) for d in h["checkins"]]
+        ids.append(h["id"])
+    if ids and x["next_id"]<=max(ids):raise ValueError
+    return x
 def load(p):
     if not p.exists():return {"version":1,"next_id":1,"habits":[]}
     try:
         x=json.loads(p.read_text(encoding="utf-8"))
-        if not isinstance(x,dict) or not isinstance(x.get("habits"),list):raise ValueError
-        return x
+        return validate(x)
     except (OSError,json.JSONDecodeError,ValueError) as e:raise RuntimeError(f"无法读取数据文件：{p}") from e
 def save(p,x):
     p.parent.mkdir(parents=True,exist_ok=True); fd,t=tempfile.mkstemp(prefix="."+p.name+".",dir=p.parent,text=True)

@@ -24,3 +24,9 @@ class Tests(unittest.TestCase):
   with self.assertRaises(ValueError):pd("20200101")
  def test_uncheck(self):self.invoke("add","冥想");self.invoke("checkin","1","--date","2020-02-02");self.assertEqual(self.invoke("uncheck","1","--date","2020-02-02")[0],0);self.assertEqual(json.loads(self.db.read_text())["habits"][0]["checkins"],[])
  def test_bad_month(self):self.invoke("add","学习");self.assertEqual(self.invoke("calendar","1","--month","nope")[0],2)
+ def test_invalid_data_is_reported_without_traceback(self):
+  self.db.write_text('{"version":1,"next_id":2,"habits":[{"id":1,"name":"坏数据","cadence":"daily","target":1,"created":"2024-01-01","checkins":["not-a-date"]}]}')
+  code,out,err=self.invoke("list")
+  self.assertEqual(code,2)
+  self.assertIn("无法读取数据文件",err)
+  self.assertNotIn("Traceback",err)
